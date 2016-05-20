@@ -1,20 +1,20 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>cf-dotnet-sdk</id>
+    <id>stackato-dotnet-sdk</id>
     <version>$version$</version>
-    <title>Cloud Foundry .NET SDK</title>
+    <title>Stackato .NET SDK</title>
     <authors>Hewlett-Packard Development Company, L.P.</authors>
     <owners>Hewlett-Packard Development Company, L.P.</owners>
     <licenseUrl>https://github.com/hpcloud/cf-dotnet-sdk/blob/master/LICENSE.md</licenseUrl>
     <projectUrl>https://github.com/hpcloud/cf-dotnet-sdk</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <releaseNotes>Built from git commit $commit$</releaseNotes>
-    <description>Cloud Foundry .NET SDK</description>
-    <summary>Cloud Foundry .NET SDK</summary>
+    <description>Stackato .NET SDK</description>
+    <summary>Stackato .NET SDK</summary>
     <iconUrl>https://region-b.geo-1.objects.hpcloudsvc.com/v1/54026737306152/ALS/v1.2/nuget-cloudfoundry-logo.png</iconUrl>
-    <copyright>© Copyright 2015 Hewlett-Packard Development Company, L.P.</copyright>
-    <tags>cloud foundy cloudfoundry sdk net .net dotnet helion</tags>
+    <copyright>© Copyright 2016 Hewlett-Packard Development Company, L.P.</copyright>
+    <tags>cloud foundy cloudfoundry sdk net .net dotnet helion stackato</tags>
     <dependencies>
       <group targetFramework="net45">
         <dependency id="WebSocket4Net" version="0.12" />
