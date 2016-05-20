@@ -54,12 +54,14 @@
     </CodeAnalysisDictionary>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Authentication\AcceptHeaderOverrideHttpClientHandler.cs" />
     <Compile Include="Authentication\IAuthentication.cs" />
     <Compile Include="Authentication\ThinkTectureAuthentication.cs" />
     <Compile Include="Authentication\Token.cs" />
     <Compile Include="CloudCredentials.cs" />
     <Compile Include="Context.cs" />
     <Compile Include="Exceptions\AuthenticationException.cs" />
+    <Compile Include="IUAA.cs" />
     <Compile Include="UAAClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

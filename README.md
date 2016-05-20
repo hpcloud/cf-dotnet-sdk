@@ -80,3 +80,45 @@ updateApp.State = "STOPPED";
 UpdateAppResponse response = client.Apps.UpdateApp(appGuid, updateApp).Result;
 Console.WriteLine("App {0} state is {1}", response.Name, response.State);
 ```
+
+### Use the V3 client
+```csharp
+using CloudFoundry.CloudController.V2;
+
+Uri target = new Uri("https://api.domain");
+Uri httpProxy = null;
+Uri authEndpoint = new Uri("https://uaa.domain");
+bool skipSsl = true;
+
+CloudFoundryClient v3client = new CloudFoundryClient(target, new System.Threading.CancellationToken(), httpProxy, skipSsl, authEndpoint);
+AuthenticationContext refreshToken = null;
+CloudCredentials credentials = new CloudCredentials();
+credentials.User = "user";
+credentials.Password = "password";
+try
+{
+    refreshToken = v3client.Login(credentials).Result;
+}
+catch (Exception ex)
+{
+    Console.WriteLine(ex.ToString());
+}
+
+PagedResponseCollection<ListAllAppsResponse> apps = v3client.Apps.ListAllApps().Result;
+foreach (ListAllAppsResponse app in apps)
+{
+    Console.WriteLine(app.Name);
+}
+```
+
+### Load a cf manifest
+```csharp
+using CloudFoundry.Manifests;
+
+Manifest manifest = ManifestDiskRepository.ReadManifest(@"path\to\manifest");
+var apps = manifest.Applications();
+foreach(var app in apps)
+{
+    Console.WriteLine("Application {0}, Memory {1}, Instances {2}", app.Name, app.Memory, app.InstanceCount);
+}
+```

@@ -26,6 +26,130 @@ namespace CloudFoundry.CloudController.V2.Test.Deserialization
 
 
         [TestMethod]
+        public void TestListAllSharedDomainsResponse()
+        {
+            string json = @"{
+  ""total_results"": 5,
+  ""total_pages"": 1,
+  ""prev_url"": null,
+  ""next_url"": null,
+  ""resources"": [
+    {
+      ""metadata"": {
+        ""guid"": ""7662b036-6569-492f-9d5e-4b1745bca39d"",
+        ""url"": ""/v2/shared_domains/7662b036-6569-492f-9d5e-4b1745bca39d"",
+        ""created_at"": ""2016-02-09T10:21:41Z"",
+        ""updated_at"": null
+      },
+      ""entity"": {
+        ""name"": ""customer-app-domain1.com""
+      }
+    },
+    {
+      ""metadata"": {
+        ""guid"": ""ea934439-c0e1-42de-bc89-a572b9301549"",
+        ""url"": ""/v2/shared_domains/ea934439-c0e1-42de-bc89-a572b9301549"",
+        ""created_at"": ""2016-02-09T10:21:41Z"",
+        ""updated_at"": null
+      },
+      ""entity"": {
+        ""name"": ""customer-app-domain2.com""
+      }
+    },
+    {
+      ""metadata"": {
+        ""guid"": ""38e385d1-7bd1-489c-ba55-c07f04ad5252"",
+        ""url"": ""/v2/shared_domains/38e385d1-7bd1-489c-ba55-c07f04ad5252"",
+        ""created_at"": ""2016-02-09T10:21:43Z"",
+        ""updated_at"": null
+      },
+      ""entity"": {
+        ""name"": ""domain-5.example.com""
+      }
+    },
+    {
+      ""metadata"": {
+        ""guid"": ""30e0adb3-d661-477f-9af3-7573d66d9669"",
+        ""url"": ""/v2/shared_domains/30e0adb3-d661-477f-9af3-7573d66d9669"",
+        ""created_at"": ""2016-02-09T10:21:43Z"",
+        ""updated_at"": null
+      },
+      ""entity"": {
+        ""name"": ""domain-6.example.com""
+      }
+    },
+    {
+      ""metadata"": {
+        ""guid"": ""b3a11a23-7bec-4e46-8bef-835145e7d9d6"",
+        ""url"": ""/v2/shared_domains/b3a11a23-7bec-4e46-8bef-835145e7d9d6"",
+        ""created_at"": ""2016-02-09T10:21:43Z"",
+        ""updated_at"": null
+      },
+      ""entity"": {
+        ""name"": ""domain-7.example.com""
+      }
+    }
+  ]
+}";
+
+            PagedResponseCollection<ListAllSharedDomainsResponse> page = Utilities.DeserializePage<ListAllSharedDomainsResponse>(json, null);
+
+            Assert.AreEqual("5", TestUtil.ToTestableString(page.Properties.TotalResults), true);
+            Assert.AreEqual("1", TestUtil.ToTestableString(page.Properties.TotalPages), true);
+            Assert.AreEqual("", TestUtil.ToTestableString(page.Properties.PreviousUrl), true);
+            Assert.AreEqual("", TestUtil.ToTestableString(page.Properties.NextUrl), true);
+            Assert.AreEqual("7662b036-6569-492f-9d5e-4b1745bca39d", TestUtil.ToTestableString(page[0].EntityMetadata.Guid), true);
+            Assert.AreEqual("/v2/shared_domains/7662b036-6569-492f-9d5e-4b1745bca39d", TestUtil.ToTestableString(page[0].EntityMetadata.Url), true);
+            Assert.AreEqual("2016-02-09T10:21:41Z", TestUtil.ToTestableString(page[0].EntityMetadata.CreatedAt), true);
+            Assert.AreEqual("", TestUtil.ToTestableString(page[0].EntityMetadata.UpdatedAt), true);
+            Assert.AreEqual("customer-app-domain1.com", TestUtil.ToTestableString(page[0].Name), true);
+            Assert.AreEqual("ea934439-c0e1-42de-bc89-a572b9301549", TestUtil.ToTestableString(page[1].EntityMetadata.Guid), true);
+            Assert.AreEqual("/v2/shared_domains/ea934439-c0e1-42de-bc89-a572b9301549", TestUtil.ToTestableString(page[1].EntityMetadata.Url), true);
+            Assert.AreEqual("2016-02-09T10:21:41Z", TestUtil.ToTestableString(page[1].EntityMetadata.CreatedAt), true);
+            Assert.AreEqual("", TestUtil.ToTestableString(page[1].EntityMetadata.UpdatedAt), true);
+            Assert.AreEqual("customer-app-domain2.com", TestUtil.ToTestableString(page[1].Name), true);
+            Assert.AreEqual("38e385d1-7bd1-489c-ba55-c07f04ad5252", TestUtil.ToTestableString(page[2].EntityMetadata.Guid), true);
+            Assert.AreEqual("/v2/shared_domains/38e385d1-7bd1-489c-ba55-c07f04ad5252", TestUtil.ToTestableString(page[2].EntityMetadata.Url), true);
+            Assert.AreEqual("2016-02-09T10:21:43Z", TestUtil.ToTestableString(page[2].EntityMetadata.CreatedAt), true);
+            Assert.AreEqual("", TestUtil.ToTestableString(page[2].EntityMetadata.UpdatedAt), true);
+            Assert.AreEqual("domain-5.example.com", TestUtil.ToTestableString(page[2].Name), true);
+            Assert.AreEqual("30e0adb3-d661-477f-9af3-7573d66d9669", TestUtil.ToTestableString(page[3].EntityMetadata.Guid), true);
+            Assert.AreEqual("/v2/shared_domains/30e0adb3-d661-477f-9af3-7573d66d9669", TestUtil.ToTestableString(page[3].EntityMetadata.Url), true);
+            Assert.AreEqual("2016-02-09T10:21:43Z", TestUtil.ToTestableString(page[3].EntityMetadata.CreatedAt), true);
+            Assert.AreEqual("", TestUtil.ToTestableString(page[3].EntityMetadata.UpdatedAt), true);
+            Assert.AreEqual("domain-6.example.com", TestUtil.ToTestableString(page[3].Name), true);
+            Assert.AreEqual("b3a11a23-7bec-4e46-8bef-835145e7d9d6", TestUtil.ToTestableString(page[4].EntityMetadata.Guid), true);
+            Assert.AreEqual("/v2/shared_domains/b3a11a23-7bec-4e46-8bef-835145e7d9d6", TestUtil.ToTestableString(page[4].EntityMetadata.Url), true);
+            Assert.AreEqual("2016-02-09T10:21:43Z", TestUtil.ToTestableString(page[4].EntityMetadata.CreatedAt), true);
+            Assert.AreEqual("", TestUtil.ToTestableString(page[4].EntityMetadata.UpdatedAt), true);
+            Assert.AreEqual("domain-7.example.com", TestUtil.ToTestableString(page[4].Name), true);
+        }
+
+        [TestMethod]
+        public void TestRetrieveSharedDomainResponse()
+        {
+            string json = @"{
+  ""metadata"": {
+    ""guid"": ""7662b036-6569-492f-9d5e-4b1745bca39d"",
+    ""url"": ""/v2/shared_domains/7662b036-6569-492f-9d5e-4b1745bca39d"",
+    ""created_at"": ""2016-02-09T10:21:41Z"",
+    ""updated_at"": null
+  },
+  ""entity"": {
+    ""name"": ""customer-app-domain1.com""
+  }
+}";
+
+            RetrieveSharedDomainResponse obj = Utilities.DeserializeJson<RetrieveSharedDomainResponse>(json);
+
+            Assert.AreEqual("7662b036-6569-492f-9d5e-4b1745bca39d", TestUtil.ToTestableString(obj.EntityMetadata.Guid), true);
+            Assert.AreEqual("/v2/shared_domains/7662b036-6569-492f-9d5e-4b1745bca39d", TestUtil.ToTestableString(obj.EntityMetadata.Url), true);
+            Assert.AreEqual("2016-02-09T10:21:41Z", TestUtil.ToTestableString(obj.EntityMetadata.CreatedAt), true);
+            Assert.AreEqual("", TestUtil.ToTestableString(obj.EntityMetadata.UpdatedAt), true);
+            Assert.AreEqual("customer-app-domain1.com", TestUtil.ToTestableString(obj.Name), true);
+        }
+
+        [TestMethod]
         public void TestFilterSharedDomainsByNameResponse()
         {
             string json = @"{
@@ -36,9 +160,9 @@ namespace CloudFoundry.CloudController.V2.Test.Deserialization
   ""resources"": [
     {
       ""metadata"": {
-        ""guid"": ""718cecfe-447c-47b1-ac6e-0055839d52ba"",
-        ""url"": ""/v2/shared_domains/718cecfe-447c-47b1-ac6e-0055839d52ba"",
-        ""created_at"": ""2015-04-16T12:04:38+00:00"",
+        ""guid"": ""0cd714dd-a3ad-48a1-9fb8-e45a70208a01"",
+        ""url"": ""/v2/shared_domains/0cd714dd-a3ad-48a1-9fb8-e45a70208a01"",
+        ""created_at"": ""2016-02-09T10:21:43Z"",
         ""updated_at"": null
       },
       ""entity"": {
@@ -54,9 +178,9 @@ namespace CloudFoundry.CloudController.V2.Test.Deserialization
             Assert.AreEqual("1", TestUtil.ToTestableString(page.Properties.TotalPages), true);
             Assert.AreEqual("", TestUtil.ToTestableString(page.Properties.PreviousUrl), true);
             Assert.AreEqual("", TestUtil.ToTestableString(page.Properties.NextUrl), true);
-            Assert.AreEqual("718cecfe-447c-47b1-ac6e-0055839d52ba", TestUtil.ToTestableString(page[0].EntityMetadata.Guid), true);
-            Assert.AreEqual("/v2/shared_domains/718cecfe-447c-47b1-ac6e-0055839d52ba", TestUtil.ToTestableString(page[0].EntityMetadata.Url), true);
-            Assert.AreEqual("2015-04-16T12:04:38+00:00", TestUtil.ToTestableString(page[0].EntityMetadata.CreatedAt), true);
+            Assert.AreEqual("0cd714dd-a3ad-48a1-9fb8-e45a70208a01", TestUtil.ToTestableString(page[0].EntityMetadata.Guid), true);
+            Assert.AreEqual("/v2/shared_domains/0cd714dd-a3ad-48a1-9fb8-e45a70208a01", TestUtil.ToTestableString(page[0].EntityMetadata.Url), true);
+            Assert.AreEqual("2016-02-09T10:21:43Z", TestUtil.ToTestableString(page[0].EntityMetadata.CreatedAt), true);
             Assert.AreEqual("", TestUtil.ToTestableString(page[0].EntityMetadata.UpdatedAt), true);
             Assert.AreEqual("shared-domain.com", TestUtil.ToTestableString(page[0].Name), true);
         }
@@ -66,9 +190,9 @@ namespace CloudFoundry.CloudController.V2.Test.Deserialization
         {
             string json = @"{
   ""metadata"": {
-    ""guid"": ""407bfc8b-b342-4bec-b509-9e415fc2df6d"",
-    ""url"": ""/v2/shared_domains/407bfc8b-b342-4bec-b509-9e415fc2df6d"",
-    ""created_at"": ""2015-04-16T12:04:38+00:00"",
+    ""guid"": ""e7c3df34-2a20-47ba-baf9-bcd81ff52a8c"",
+    ""url"": ""/v2/shared_domains/e7c3df34-2a20-47ba-baf9-bcd81ff52a8c"",
+    ""created_at"": ""2016-02-09T10:21:43Z"",
     ""updated_at"": null
   },
   ""entity"": {
@@ -78,135 +202,11 @@ namespace CloudFoundry.CloudController.V2.Test.Deserialization
 
             CreateSharedDomainResponse obj = Utilities.DeserializeJson<CreateSharedDomainResponse>(json);
 
-            Assert.AreEqual("407bfc8b-b342-4bec-b509-9e415fc2df6d", TestUtil.ToTestableString(obj.EntityMetadata.Guid), true);
-            Assert.AreEqual("/v2/shared_domains/407bfc8b-b342-4bec-b509-9e415fc2df6d", TestUtil.ToTestableString(obj.EntityMetadata.Url), true);
-            Assert.AreEqual("2015-04-16T12:04:38+00:00", TestUtil.ToTestableString(obj.EntityMetadata.CreatedAt), true);
+            Assert.AreEqual("e7c3df34-2a20-47ba-baf9-bcd81ff52a8c", TestUtil.ToTestableString(obj.EntityMetadata.Guid), true);
+            Assert.AreEqual("/v2/shared_domains/e7c3df34-2a20-47ba-baf9-bcd81ff52a8c", TestUtil.ToTestableString(obj.EntityMetadata.Url), true);
+            Assert.AreEqual("2016-02-09T10:21:43Z", TestUtil.ToTestableString(obj.EntityMetadata.CreatedAt), true);
             Assert.AreEqual("", TestUtil.ToTestableString(obj.EntityMetadata.UpdatedAt), true);
             Assert.AreEqual("example.com", TestUtil.ToTestableString(obj.Name), true);
-        }
-
-        [TestMethod]
-        public void TestListAllSharedDomainsResponse()
-        {
-            string json = @"{
-  ""total_results"": 5,
-  ""total_pages"": 1,
-  ""prev_url"": null,
-  ""next_url"": null,
-  ""resources"": [
-    {
-      ""metadata"": {
-        ""guid"": ""0210f9ef-64f7-48c4-b37e-5cd5e4080da5"",
-        ""url"": ""/v2/shared_domains/0210f9ef-64f7-48c4-b37e-5cd5e4080da5"",
-        ""created_at"": ""2015-04-16T12:04:14+00:00"",
-        ""updated_at"": null
-      },
-      ""entity"": {
-        ""name"": ""customer-app-domain1.com""
-      }
-    },
-    {
-      ""metadata"": {
-        ""guid"": ""0359e25a-338d-42e0-ac6c-f7fc3dd3032d"",
-        ""url"": ""/v2/shared_domains/0359e25a-338d-42e0-ac6c-f7fc3dd3032d"",
-        ""created_at"": ""2015-04-16T12:04:14+00:00"",
-        ""updated_at"": null
-      },
-      ""entity"": {
-        ""name"": ""customer-app-domain2.com""
-      }
-    },
-    {
-      ""metadata"": {
-        ""guid"": ""04a0a7f6-3e80-4867-8108-263ef954a485"",
-        ""url"": ""/v2/shared_domains/04a0a7f6-3e80-4867-8108-263ef954a485"",
-        ""created_at"": ""2015-04-16T12:04:37+00:00"",
-        ""updated_at"": null
-      },
-      ""entity"": {
-        ""name"": ""domain-41.example.com""
-      }
-    },
-    {
-      ""metadata"": {
-        ""guid"": ""cf3a31b9-7aa1-4d90-95ec-ec679798f69f"",
-        ""url"": ""/v2/shared_domains/cf3a31b9-7aa1-4d90-95ec-ec679798f69f"",
-        ""created_at"": ""2015-04-16T12:04:37+00:00"",
-        ""updated_at"": null
-      },
-      ""entity"": {
-        ""name"": ""domain-42.example.com""
-      }
-    },
-    {
-      ""metadata"": {
-        ""guid"": ""c623cf02-35f4-40d7-ae90-433339d174b3"",
-        ""url"": ""/v2/shared_domains/c623cf02-35f4-40d7-ae90-433339d174b3"",
-        ""created_at"": ""2015-04-16T12:04:37+00:00"",
-        ""updated_at"": null
-      },
-      ""entity"": {
-        ""name"": ""domain-43.example.com""
-      }
-    }
-  ]
-}";
-
-            PagedResponseCollection<ListAllSharedDomainsResponse> page = Utilities.DeserializePage<ListAllSharedDomainsResponse>(json, null);
-
-            Assert.AreEqual("5", TestUtil.ToTestableString(page.Properties.TotalResults), true);
-            Assert.AreEqual("1", TestUtil.ToTestableString(page.Properties.TotalPages), true);
-            Assert.AreEqual("", TestUtil.ToTestableString(page.Properties.PreviousUrl), true);
-            Assert.AreEqual("", TestUtil.ToTestableString(page.Properties.NextUrl), true);
-            Assert.AreEqual("0210f9ef-64f7-48c4-b37e-5cd5e4080da5", TestUtil.ToTestableString(page[0].EntityMetadata.Guid), true);
-            Assert.AreEqual("/v2/shared_domains/0210f9ef-64f7-48c4-b37e-5cd5e4080da5", TestUtil.ToTestableString(page[0].EntityMetadata.Url), true);
-            Assert.AreEqual("2015-04-16T12:04:14+00:00", TestUtil.ToTestableString(page[0].EntityMetadata.CreatedAt), true);
-            Assert.AreEqual("", TestUtil.ToTestableString(page[0].EntityMetadata.UpdatedAt), true);
-            Assert.AreEqual("customer-app-domain1.com", TestUtil.ToTestableString(page[0].Name), true);
-            Assert.AreEqual("0359e25a-338d-42e0-ac6c-f7fc3dd3032d", TestUtil.ToTestableString(page[1].EntityMetadata.Guid), true);
-            Assert.AreEqual("/v2/shared_domains/0359e25a-338d-42e0-ac6c-f7fc3dd3032d", TestUtil.ToTestableString(page[1].EntityMetadata.Url), true);
-            Assert.AreEqual("2015-04-16T12:04:14+00:00", TestUtil.ToTestableString(page[1].EntityMetadata.CreatedAt), true);
-            Assert.AreEqual("", TestUtil.ToTestableString(page[1].EntityMetadata.UpdatedAt), true);
-            Assert.AreEqual("customer-app-domain2.com", TestUtil.ToTestableString(page[1].Name), true);
-            Assert.AreEqual("04a0a7f6-3e80-4867-8108-263ef954a485", TestUtil.ToTestableString(page[2].EntityMetadata.Guid), true);
-            Assert.AreEqual("/v2/shared_domains/04a0a7f6-3e80-4867-8108-263ef954a485", TestUtil.ToTestableString(page[2].EntityMetadata.Url), true);
-            Assert.AreEqual("2015-04-16T12:04:37+00:00", TestUtil.ToTestableString(page[2].EntityMetadata.CreatedAt), true);
-            Assert.AreEqual("", TestUtil.ToTestableString(page[2].EntityMetadata.UpdatedAt), true);
-            Assert.AreEqual("domain-41.example.com", TestUtil.ToTestableString(page[2].Name), true);
-            Assert.AreEqual("cf3a31b9-7aa1-4d90-95ec-ec679798f69f", TestUtil.ToTestableString(page[3].EntityMetadata.Guid), true);
-            Assert.AreEqual("/v2/shared_domains/cf3a31b9-7aa1-4d90-95ec-ec679798f69f", TestUtil.ToTestableString(page[3].EntityMetadata.Url), true);
-            Assert.AreEqual("2015-04-16T12:04:37+00:00", TestUtil.ToTestableString(page[3].EntityMetadata.CreatedAt), true);
-            Assert.AreEqual("", TestUtil.ToTestableString(page[3].EntityMetadata.UpdatedAt), true);
-            Assert.AreEqual("domain-42.example.com", TestUtil.ToTestableString(page[3].Name), true);
-            Assert.AreEqual("c623cf02-35f4-40d7-ae90-433339d174b3", TestUtil.ToTestableString(page[4].EntityMetadata.Guid), true);
-            Assert.AreEqual("/v2/shared_domains/c623cf02-35f4-40d7-ae90-433339d174b3", TestUtil.ToTestableString(page[4].EntityMetadata.Url), true);
-            Assert.AreEqual("2015-04-16T12:04:37+00:00", TestUtil.ToTestableString(page[4].EntityMetadata.CreatedAt), true);
-            Assert.AreEqual("", TestUtil.ToTestableString(page[4].EntityMetadata.UpdatedAt), true);
-            Assert.AreEqual("domain-43.example.com", TestUtil.ToTestableString(page[4].Name), true);
-        }
-
-        [TestMethod]
-        public void TestRetrieveSharedDomainResponse()
-        {
-            string json = @"{
-  ""metadata"": {
-    ""guid"": ""0210f9ef-64f7-48c4-b37e-5cd5e4080da5"",
-    ""url"": ""/v2/shared_domains/0210f9ef-64f7-48c4-b37e-5cd5e4080da5"",
-    ""created_at"": ""2015-04-16T12:04:14+00:00"",
-    ""updated_at"": null
-  },
-  ""entity"": {
-    ""name"": ""customer-app-domain1.com""
-  }
-}";
-
-            RetrieveSharedDomainResponse obj = Utilities.DeserializeJson<RetrieveSharedDomainResponse>(json);
-
-            Assert.AreEqual("0210f9ef-64f7-48c4-b37e-5cd5e4080da5", TestUtil.ToTestableString(obj.EntityMetadata.Guid), true);
-            Assert.AreEqual("/v2/shared_domains/0210f9ef-64f7-48c4-b37e-5cd5e4080da5", TestUtil.ToTestableString(obj.EntityMetadata.Url), true);
-            Assert.AreEqual("2015-04-16T12:04:14+00:00", TestUtil.ToTestableString(obj.EntityMetadata.CreatedAt), true);
-            Assert.AreEqual("", TestUtil.ToTestableString(obj.EntityMetadata.UpdatedAt), true);
-            Assert.AreEqual("customer-app-domain1.com", TestUtil.ToTestableString(obj.Name), true);
         }
     }
 }

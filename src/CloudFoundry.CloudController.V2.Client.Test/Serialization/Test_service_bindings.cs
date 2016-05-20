@@ -31,14 +31,14 @@ namespace CloudFoundry.CloudController.V2.Test.Serialization
         public void TestCreateServiceBindingRequest()
         {
             string json = @"{
-  ""service_instance_guid"": ""efa04183-646b-4602-9ede-b6555287d8e7"",
-  ""app_guid"": ""f00a7716-66d9-43db-9e78-84eba6eafb56""
+  ""service_instance_guid"": ""3deecd09-48ce-4a4b-9450-af316053bc1e"",
+  ""app_guid"": ""b214dfe6-743b-4c0a-9b03-b5ed6a866e9c""
 }";
 
             CreateServiceBindingRequest request = new CreateServiceBindingRequest();
 
-            request.ServiceInstanceGuid = new Guid("efa04183-646b-4602-9ede-b6555287d8e7");
-            request.AppGuid = new Guid("f00a7716-66d9-43db-9e78-84eba6eafb56");
+            request.ServiceInstanceGuid = new Guid("3deecd09-48ce-4a4b-9450-af316053bc1e");
+            request.AppGuid = new Guid("b214dfe6-743b-4c0a-9b03-b5ed6a866e9c");
             string result = JsonConvert.SerializeObject(request, Formatting.None);
             Assert.AreEqual(TestUtil.ToUnformatedJsonString(json), result);
         }

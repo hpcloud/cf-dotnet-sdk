@@ -8,6 +8,7 @@ namespace CloudFoundry.CloudController.V2.Client
     using System.Net.Http;
     using System.Text;
     using System.Threading.Tasks;
+    using CloudFoundry.CloudController.Common.Exceptions;
     using CloudFoundry.CloudController.Common.Http;
     using CloudFoundry.CloudController.Common.PushTools;
     using CloudFoundry.CloudController.V2.Client.Data;
@@ -41,7 +42,7 @@ namespace CloudFoundry.CloudController.V2.Client
                 throw new ArgumentNullException("appPath");
             }
 
-            IAppPushTools pushTools = new AppPushTools();
+            IAppPushTools pushTools = new AppPushTools(appPath);
             int usedSteps = 1;
 
             // Step 1 - Check if application exists
@@ -52,7 +53,7 @@ namespace CloudFoundry.CloudController.V2.Client
 
             // Step 2 - Compute fingerprints for local files
             this.TriggerPushProgressEvent(usedSteps, "Calculating file fingerprints ...");
-            Dictionary<string, List<FileFingerprint>> fingerprints = await pushTools.GetFileFingerprints(appPath, this.Client.CancellationToken);
+            Dictionary<string, List<FileFingerprint>> fingerprints = await pushTools.GetFileFingerprints(this.Client.CancellationToken);
             if (this.CheckCancellation())
             {
                 return;
@@ -62,7 +63,8 @@ namespace CloudFoundry.CloudController.V2.Client
 
             // Step 3 - Compare fingerprints of local files with what the server has
             this.TriggerPushProgressEvent(usedSteps, "Comparing file fingerprints ...");
-            string[] neededFiles = await this.FilterExistingFiles(fingerprints);
+            HashSet<string> neededFiles = await this.FilterExistingFiles(fingerprints);
+
             if (this.CheckCancellation())
             {
                 return;
@@ -72,7 +74,7 @@ namespace CloudFoundry.CloudController.V2.Client
 
             // Step 4 - Zip all needed files and get a stream back from the PushTools
             this.TriggerPushProgressEvent(usedSteps, "Creating zip package ...");
-            using (Stream zippedPayload = await pushTools.GetZippedPayload(appPath, neededFiles, this.Client.CancellationToken))
+            using (Stream zippedPayload = await pushTools.GetZippedPayload(neededFiles, this.Client.CancellationToken))
             {
                 if (this.CheckCancellation())
                 {
@@ -83,13 +85,11 @@ namespace CloudFoundry.CloudController.V2.Client
 
                 // Step 5 - Upload zip to CloudFoundry ...
                 this.TriggerPushProgressEvent(usedSteps, "Uploading zip package ...");
-                UriBuilder uploadEndpoint = new UriBuilder(this.Client.CloudTarget.AbsoluteUri);
-                uploadEndpoint.Path = string.Format(CultureInfo.InvariantCulture, "/v2/apps/{0}/bits", appGuid.ToString());
 
-                List<FileFingerprint> fingerPrintList = fingerprints.Values.SelectMany(list => list).ToList();
+                List<FileFingerprint> fingerPrintList = fingerprints.Values.SelectMany(list => list).Where(fingerprint => !neededFiles.Contains(fingerprint.FileName)).ToList();
 
-                string serializedFingerprints = JsonConvert.SerializeObject(fingerPrintList);
-                SimpleHttpResponse uploadResult = await this.UploadZip(uploadEndpoint.Uri, zippedPayload, serializedFingerprints);
+                await this.UploadBits(appGuid, zippedPayload, fingerPrintList);
+
                 if (this.CheckCancellation())
                 {
                     return;
@@ -116,6 +116,35 @@ namespace CloudFoundry.CloudController.V2.Client
 
             // Step 7 - Done
             this.TriggerPushProgressEvent(usedSteps, "Application {0} pushed successfully", app.Name);
+        }
+
+        /// <summary>
+        /// Defines and uploads the application bits.
+        /// <remarks>
+        /// This method is only available on the .NET 4.5 framework.
+        /// Calling this method from a Windows Phone App or a Windows App will throw a <see cref="NotImplementedException" />.
+        /// </remarks>
+        /// </summary>
+        /// <param name="appGuid">Application guid</param>
+        /// <param name="zipStream">The zip stream.</param>
+        /// <param name="fingerPrintList">The finger print list.</param>
+        /// <exception cref="CloudFoundryException"></exception>
+        /// <exception cref="NotImplementedException"></exception>
+        public async Task UploadBits(Guid appGuid, Stream zipStream, List<FileFingerprint> fingerPrintList)
+        {
+            string serializedFingerprints = JsonConvert.SerializeObject(fingerPrintList);
+
+            UriBuilder uploadEndpoint = new UriBuilder(this.Client.CloudTarget.AbsoluteUri);
+            uploadEndpoint.Path = string.Format(CultureInfo.InvariantCulture, "/v2/apps/{0}/bits", appGuid.ToString());
+
+            SimpleHttpResponse uploadResult = await this.UploadZip(uploadEndpoint.Uri, zipStream, serializedFingerprints);
+
+            if (uploadResult.StatusCode != System.Net.HttpStatusCode.Created)
+            {
+                var statusCode = uploadResult.StatusCode.ToString("D");
+
+                throw new CloudFoundryException(string.Format(CultureInfo.InvariantCulture, "An error occurred while uploading bits to the server. Status code: {0}", statusCode));
+            }
         }
 
         /// <summary>
@@ -177,20 +206,21 @@ namespace CloudFoundry.CloudController.V2.Client
 
             using (SimpleHttpClient httpClient = new SimpleHttpClient(this.Client.CancellationToken, AppsEndpoint.DefaultUploadTimeout))
             {
+                // http://apidocs.cloudfoundry.org/210/apps/uploads_the_bits_for_an_app.html
                 httpClient.HttpProxy = Client.HttpProxy;
                 httpClient.SkipCertificateValidation = Client.SkipCertificateValidation;
 
                 httpClient.Headers.Add("Authorization", string.Format("bearer {0}", this.Client.AuthorizationToken));
 
                 httpClient.Uri = uploadUri;
-                httpClient.Method = HttpMethod.Post;
+                httpClient.Method = HttpMethod.Put;
 
                 List<HttpMultipartFormData> mpd = new List<HttpMultipartFormData>();
                 using (MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(resources)))
                 {
                     ms.Position = 0;
                     mpd.Add(new HttpMultipartFormData("resources", string.Empty, string.Empty, ms));
-                    mpd.Add(new HttpMultipartFormData("application", "app.zip", "application/zip", zipStream));
+                    mpd.Add(new HttpMultipartFormData("application", "application.zip", "application/zip", zipStream));
                     SimpleHttpResponse response = await httpClient.SendAsync(mpd);
                     return response;
                 }
@@ -202,7 +232,7 @@ namespace CloudFoundry.CloudController.V2.Client
         /// </summary>
         /// <param name="fingerprints">The key of the dictionary is an SHA1 fingerprint</param>
         /// <returns>A list of files that do not exist on the server.</returns>
-        private async Task<string[]> FilterExistingFiles(Dictionary<string, List<FileFingerprint>> fingerprints)
+        private async Task<HashSet<string>> FilterExistingFiles(Dictionary<string, List<FileFingerprint>> fingerprints)
         {
             Dictionary<string, List<FileFingerprint>> filteredResources = new Dictionary<string, List<FileFingerprint>>();
 
@@ -211,16 +241,15 @@ namespace CloudFoundry.CloudController.V2.Client
             // Loop through each fingerprint and construct our request
             foreach (KeyValuePair<string, List<FileFingerprint>> fingerprintList in fingerprints)
             {
-                foreach (FileFingerprint fingerprint in fingerprintList.Value)
-                {
-                    ListAllMatchingResourcesRequest match = new ListAllMatchingResourcesRequest()
-                    {
-                        Sha1 = fingerprint.SHA1,
-                        Size = fingerprint.Size
-                    };
+                var fingerprint = fingerprintList.Value.First();
 
-                    matchRequest.Add(match);
-                }
+                ListAllMatchingResourcesRequest match = new ListAllMatchingResourcesRequest()
+                {
+                    Sha1 = fingerprint.SHA1,
+                    Size = fingerprint.Size
+                };
+
+                matchRequest.Add(match);
 
                 // We're building the response with all fingerprints,
                 // matches will be removed after the server replies
@@ -232,7 +261,7 @@ namespace CloudFoundry.CloudController.V2.Client
             // If the request was cancelled, return immediately
             if (this.CheckCancellation())
             {
-                return filteredResources.Values.SelectMany(list => list.Select(f => f.FileName)).ToArray();
+                return new HashSet<string>(filteredResources.Values.SelectMany(list => list.Select(f => f.FileName)));
             }
 
             // Remove all server matches from our result
@@ -241,7 +270,7 @@ namespace CloudFoundry.CloudController.V2.Client
                 filteredResources.Remove(resource.Sha1);
             }
 
-            return filteredResources.Values.SelectMany(list => list.Select(f => f.FileName)).ToArray();
+            return new HashSet<string>(filteredResources.Values.SelectMany(list => list.Select(f => f.FileName)));
         }
     }
 }

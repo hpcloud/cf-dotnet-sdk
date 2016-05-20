@@ -21,7 +21,6 @@ using System.Globalization;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-
 namespace CloudFoundry.CloudController.V2.Client
 {
     /// <summary>
@@ -53,100 +52,9 @@ namespace CloudFoundry.CloudController.V2.Client.Base
         }
 
         /// <summary>
-        /// Get the Service Instance Creation feature flag
-        /// <para>When enabled, a space developer can create service instances in a space. When disabled, only admin users can create service instances.</para>
-        /// <para>For detailed information, see online documentation at: "http://apidocs.cloudfoundry.org/195/feature_flags/get_the_service_instance_creation_feature_flag.html"</para>
-        /// </summary>
-        public async Task<GetServiceInstanceCreationFeatureFlagResponse> GetServiceInstanceCreationFeatureFlag()
-        {
-            UriBuilder uriBuilder = new UriBuilder(this.Client.CloudTarget);
-            uriBuilder.Path = "/v2/config/feature_flags/service_instance_creation";
-            var client = this.GetHttpClient();
-            client.Uri = uriBuilder.Uri;
-            client.Method = HttpMethod.Get;
-            client.Headers.Add(await BuildAuthenticationHeader());
-            var expectedReturnStatus = 200;
-            var response = await this.SendAsync(client, expectedReturnStatus);
-            return Utilities.DeserializeJson<GetServiceInstanceCreationFeatureFlagResponse>(await response.ReadContentAsStringAsync());
-        }
-
-        /// <summary>
-        /// Set a feature flag
-        /// <para>For detailed information, see online documentation at: "http://apidocs.cloudfoundry.org/195/feature_flags/set_a_feature_flag.html"</para>
-        /// </summary>
-        public async Task<SetFeatureFlagResponse> SetFeatureFlag(dynamic name, SetFeatureFlagRequest value)
-        {
-            UriBuilder uriBuilder = new UriBuilder(this.Client.CloudTarget);
-            uriBuilder.Path = string.Format(CultureInfo.InvariantCulture, "/v2/config/feature_flags/{0}", name);
-            var client = this.GetHttpClient();
-            client.Uri = uriBuilder.Uri;
-            client.Method = HttpMethod.Put;
-            client.Headers.Add(await BuildAuthenticationHeader());
-            client.ContentType = "application/x-www-form-urlencoded";
-            client.Content = JsonConvert.SerializeObject(value).ConvertToStream();
-            var expectedReturnStatus = 200;
-            var response = await this.SendAsync(client, expectedReturnStatus);
-            return Utilities.DeserializeJson<SetFeatureFlagResponse>(await response.ReadContentAsStringAsync());
-        }
-
-        /// <summary>
-        /// Get the Route Creation feature flag
-        /// <para>When enabled, a space developer can create routes in a space. When disabled, only admin users can create routes.</para>
-        /// <para>For detailed information, see online documentation at: "http://apidocs.cloudfoundry.org/195/feature_flags/get_the_route_creation_feature_flag.html"</para>
-        /// </summary>
-        public async Task<GetRouteCreationFeatureFlagResponse> GetRouteCreationFeatureFlag()
-        {
-            UriBuilder uriBuilder = new UriBuilder(this.Client.CloudTarget);
-            uriBuilder.Path = "/v2/config/feature_flags/route_creation";
-            var client = this.GetHttpClient();
-            client.Uri = uriBuilder.Uri;
-            client.Method = HttpMethod.Get;
-            client.Headers.Add(await BuildAuthenticationHeader());
-            var expectedReturnStatus = 200;
-            var response = await this.SendAsync(client, expectedReturnStatus);
-            return Utilities.DeserializeJson<GetRouteCreationFeatureFlagResponse>(await response.ReadContentAsStringAsync());
-        }
-
-        /// <summary>
-        /// Get the Private Domain Creation feature flag
-        /// <para>When enabled, an organization manager can create private domains for that organization. When disabled, only admin users can create private domains.</para>
-        /// <para>For detailed information, see online documentation at: "http://apidocs.cloudfoundry.org/195/feature_flags/get_the_private_domain_creation_feature_flag.html"</para>
-        /// </summary>
-        public async Task<GetPrivateDomainCreationFeatureFlagResponse> GetPrivateDomainCreationFeatureFlag()
-        {
-            UriBuilder uriBuilder = new UriBuilder(this.Client.CloudTarget);
-            uriBuilder.Path = "/v2/config/feature_flags/private_domain_creation";
-            var client = this.GetHttpClient();
-            client.Uri = uriBuilder.Uri;
-            client.Method = HttpMethod.Get;
-            client.Headers.Add(await BuildAuthenticationHeader());
-            var expectedReturnStatus = 200;
-            var response = await this.SendAsync(client, expectedReturnStatus);
-            return Utilities.DeserializeJson<GetPrivateDomainCreationFeatureFlagResponse>(await response.ReadContentAsStringAsync());
-        }
-
-        /// <summary>
-        /// Get the App Scaling feature flag
-        /// <para>When enabled, space developers can perform scaling operations (i.e. change memory, disk or instances). When disabled, only admin users can perform scaling operations.</para>
-        /// <para>For detailed information, see online documentation at: "http://apidocs.cloudfoundry.org/195/feature_flags/get_the_app_scaling_feature_flag.html"</para>
-        /// </summary>
-        public async Task<GetAppScalingFeatureFlagResponse> GetAppScalingFeatureFlag()
-        {
-            UriBuilder uriBuilder = new UriBuilder(this.Client.CloudTarget);
-            uriBuilder.Path = "/v2/config/feature_flags/app_scaling";
-            var client = this.GetHttpClient();
-            client.Uri = uriBuilder.Uri;
-            client.Method = HttpMethod.Get;
-            client.Headers.Add(await BuildAuthenticationHeader());
-            var expectedReturnStatus = 200;
-            var response = await this.SendAsync(client, expectedReturnStatus);
-            return Utilities.DeserializeJson<GetAppScalingFeatureFlagResponse>(await response.ReadContentAsStringAsync());
-        }
-
-        /// <summary>
         /// Get the App Bits Upload feature flag
         /// <para>When enabled, space developers can upload app bits. When disabled, only admin users can upload app bits</para>
-        /// <para>For detailed information, see online documentation at: "http://apidocs.cloudfoundry.org/195/feature_flags/get_the_app_bits_upload_feature_flag.html"</para>
+        /// <para>For detailed information, see online documentation at: "http://apidocs.cloudfoundry.org/205/feature_flags/get_the_app_bits_upload_feature_flag.html"</para>
         /// </summary>
         public async Task<GetAppBitsUploadFeatureFlagResponse> GetAppBitsUploadFeatureFlag()
         {
@@ -155,33 +63,64 @@ namespace CloudFoundry.CloudController.V2.Client.Base
             var client = this.GetHttpClient();
             client.Uri = uriBuilder.Uri;
             client.Method = HttpMethod.Get;
-            client.Headers.Add(await BuildAuthenticationHeader());
+            var authHeader = await BuildAuthenticationHeader();
+            if (!string.IsNullOrWhiteSpace(authHeader.Key))
+            {
+                client.Headers.Add(authHeader);
+            }
             var expectedReturnStatus = 200;
             var response = await this.SendAsync(client, expectedReturnStatus);
             return Utilities.DeserializeJson<GetAppBitsUploadFeatureFlagResponse>(await response.ReadContentAsStringAsync());
         }
 
         /// <summary>
-        /// Get all feature flags
-        /// <para>For detailed information, see online documentation at: "http://apidocs.cloudfoundry.org/195/feature_flags/get_all_feature_flags.html"</para>
+        /// Get the Route Creation feature flag
+        /// <para>When enabled, a space developer can create routes in a space. When disabled, only admin users can create routes.</para>
+        /// <para>For detailed information, see online documentation at: "http://apidocs.cloudfoundry.org/205/feature_flags/get_the_route_creation_feature_flag.html"</para>
         /// </summary>
-        public async Task<GetAllFeatureFlagsResponse[]> GetAllFeatureFlags()
+        public async Task<GetRouteCreationFeatureFlagResponse> GetRouteCreationFeatureFlag()
         {
             UriBuilder uriBuilder = new UriBuilder(this.Client.CloudTarget);
-            uriBuilder.Path = "/v2/config/feature_flags";
+            uriBuilder.Path = "/v2/config/feature_flags/route_creation";
             var client = this.GetHttpClient();
             client.Uri = uriBuilder.Uri;
             client.Method = HttpMethod.Get;
-            client.Headers.Add(await BuildAuthenticationHeader());
+            var authHeader = await BuildAuthenticationHeader();
+            if (!string.IsNullOrWhiteSpace(authHeader.Key))
+            {
+                client.Headers.Add(authHeader);
+            }
             var expectedReturnStatus = 200;
             var response = await this.SendAsync(client, expectedReturnStatus);
-            return Utilities.DeserializeJsonArray<GetAllFeatureFlagsResponse>(await response.ReadContentAsStringAsync());
+            return Utilities.DeserializeJson<GetRouteCreationFeatureFlagResponse>(await response.ReadContentAsStringAsync());
+        }
+
+        /// <summary>
+        /// Get the App Scaling feature flag
+        /// <para>When enabled, space developers can perform scaling operations (i.e. change memory, disk or instances). When disabled, only admins can perform scaling operations.</para>
+        /// <para>For detailed information, see online documentation at: "http://apidocs.cloudfoundry.org/205/feature_flags/get_the_app_scaling_feature_flag.html"</para>
+        /// </summary>
+        public async Task<GetAppScalingFeatureFlagResponse> GetAppScalingFeatureFlag()
+        {
+            UriBuilder uriBuilder = new UriBuilder(this.Client.CloudTarget);
+            uriBuilder.Path = "/v2/config/feature_flags/app_scaling";
+            var client = this.GetHttpClient();
+            client.Uri = uriBuilder.Uri;
+            client.Method = HttpMethod.Get;
+            var authHeader = await BuildAuthenticationHeader();
+            if (!string.IsNullOrWhiteSpace(authHeader.Key))
+            {
+                client.Headers.Add(authHeader);
+            }
+            var expectedReturnStatus = 200;
+            var response = await this.SendAsync(client, expectedReturnStatus);
+            return Utilities.DeserializeJson<GetAppScalingFeatureFlagResponse>(await response.ReadContentAsStringAsync());
         }
 
         /// <summary>
         /// Get the User Org Creation feature flag
         /// <para>When enabled, any user can create an organization via the API. When disabled, only admin users can create organizations via the API.</para>
-        /// <para>For detailed information, see online documentation at: "http://apidocs.cloudfoundry.org/195/feature_flags/get_the_user_org_creation_feature_flag.html"</para>
+        /// <para>For detailed information, see online documentation at: "http://apidocs.cloudfoundry.org/205/feature_flags/get_the_user_org_creation_feature_flag.html"</para>
         /// </summary>
         public async Task<GetUserOrgCreationFeatureFlagResponse> GetUserOrgCreationFeatureFlag()
         {
@@ -190,10 +129,102 @@ namespace CloudFoundry.CloudController.V2.Client.Base
             var client = this.GetHttpClient();
             client.Uri = uriBuilder.Uri;
             client.Method = HttpMethod.Get;
-            client.Headers.Add(await BuildAuthenticationHeader());
+            var authHeader = await BuildAuthenticationHeader();
+            if (!string.IsNullOrWhiteSpace(authHeader.Key))
+            {
+                client.Headers.Add(authHeader);
+            }
             var expectedReturnStatus = 200;
             var response = await this.SendAsync(client, expectedReturnStatus);
             return Utilities.DeserializeJson<GetUserOrgCreationFeatureFlagResponse>(await response.ReadContentAsStringAsync());
+        }
+
+        /// <summary>
+        /// Get all feature flags
+        /// <para>For detailed information, see online documentation at: "http://apidocs.cloudfoundry.org/205/feature_flags/get_all_feature_flags.html"</para>
+        /// </summary>
+        public async Task<GetAllFeatureFlagsResponse[]> GetAllFeatureFlags()
+        {
+            UriBuilder uriBuilder = new UriBuilder(this.Client.CloudTarget);
+            uriBuilder.Path = "/v2/config/feature_flags";
+            var client = this.GetHttpClient();
+            client.Uri = uriBuilder.Uri;
+            client.Method = HttpMethod.Get;
+            var authHeader = await BuildAuthenticationHeader();
+            if (!string.IsNullOrWhiteSpace(authHeader.Key))
+            {
+                client.Headers.Add(authHeader);
+            }
+            var expectedReturnStatus = 200;
+            var response = await this.SendAsync(client, expectedReturnStatus);
+            return Utilities.DeserializeJsonArray<GetAllFeatureFlagsResponse>(await response.ReadContentAsStringAsync());
+        }
+
+        /// <summary>
+        /// Get the Service Instance Creation feature flag
+        /// <para>When enabled, a space developer can create service instances in a space. When disabled, only admin users can create service instances.</para>
+        /// <para>For detailed information, see online documentation at: "http://apidocs.cloudfoundry.org/205/feature_flags/get_the_service_instance_creation_feature_flag.html"</para>
+        /// </summary>
+        public async Task<GetServiceInstanceCreationFeatureFlagResponse> GetServiceInstanceCreationFeatureFlag()
+        {
+            UriBuilder uriBuilder = new UriBuilder(this.Client.CloudTarget);
+            uriBuilder.Path = "/v2/config/feature_flags/service_instance_creation";
+            var client = this.GetHttpClient();
+            client.Uri = uriBuilder.Uri;
+            client.Method = HttpMethod.Get;
+            var authHeader = await BuildAuthenticationHeader();
+            if (!string.IsNullOrWhiteSpace(authHeader.Key))
+            {
+                client.Headers.Add(authHeader);
+            }
+            var expectedReturnStatus = 200;
+            var response = await this.SendAsync(client, expectedReturnStatus);
+            return Utilities.DeserializeJson<GetServiceInstanceCreationFeatureFlagResponse>(await response.ReadContentAsStringAsync());
+        }
+
+        /// <summary>
+        /// Set a feature flag
+        /// <para>For detailed information, see online documentation at: "http://apidocs.cloudfoundry.org/205/feature_flags/set_a_feature_flag.html"</para>
+        /// </summary>
+        public async Task<SetFeatureFlagResponse> SetFeatureFlag(dynamic name, SetFeatureFlagRequest value)
+        {
+            UriBuilder uriBuilder = new UriBuilder(this.Client.CloudTarget);
+            uriBuilder.Path = string.Format(CultureInfo.InvariantCulture, "/v2/config/feature_flags/{0}", name);
+            var client = this.GetHttpClient();
+            client.Uri = uriBuilder.Uri;
+            client.Method = HttpMethod.Put;
+            var authHeader = await BuildAuthenticationHeader();
+            if (!string.IsNullOrWhiteSpace(authHeader.Key))
+            {
+                client.Headers.Add(authHeader);
+            }
+            client.ContentType = "application/x-www-form-urlencoded";
+            client.Content = ((string)JsonConvert.SerializeObject(value)).ConvertToStream();
+            var expectedReturnStatus = 200;
+            var response = await this.SendAsync(client, expectedReturnStatus);
+            return Utilities.DeserializeJson<SetFeatureFlagResponse>(await response.ReadContentAsStringAsync());
+        }
+
+        /// <summary>
+        /// Get the Private Domain Creation feature flag
+        /// <para>When enabled, an organization manager can create private domains for that organization. When disabled, only admin users can create private domains.</para>
+        /// <para>For detailed information, see online documentation at: "http://apidocs.cloudfoundry.org/205/feature_flags/get_the_private_domain_creation_feature_flag.html"</para>
+        /// </summary>
+        public async Task<GetPrivateDomainCreationFeatureFlagResponse> GetPrivateDomainCreationFeatureFlag()
+        {
+            UriBuilder uriBuilder = new UriBuilder(this.Client.CloudTarget);
+            uriBuilder.Path = "/v2/config/feature_flags/private_domain_creation";
+            var client = this.GetHttpClient();
+            client.Uri = uriBuilder.Uri;
+            client.Method = HttpMethod.Get;
+            var authHeader = await BuildAuthenticationHeader();
+            if (!string.IsNullOrWhiteSpace(authHeader.Key))
+            {
+                client.Headers.Add(authHeader);
+            }
+            var expectedReturnStatus = 200;
+            var response = await this.SendAsync(client, expectedReturnStatus);
+            return Utilities.DeserializeJson<GetPrivateDomainCreationFeatureFlagResponse>(await response.ReadContentAsStringAsync());
         }
     }
 }

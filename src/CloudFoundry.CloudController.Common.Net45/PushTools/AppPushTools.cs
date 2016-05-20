@@ -14,26 +14,53 @@
     /// </summary>
     public class AppPushTools : IAppPushTools
     {
+        private string appPath;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AppPushTools"/> class.
+        /// </summary>
+        /// <param name="appPath">The path to the application folder or the path to a zip file.</param>
+        public AppPushTools(string appPath)
+        {
+            if (File.Exists(appPath))
+            {
+                var extractedPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+
+                if (!Directory.Exists(extractedPath))
+                {
+                    Directory.CreateDirectory(extractedPath);
+                }
+
+                System.IO.Compression.ZipFile.ExtractToDirectory(appPath, extractedPath);
+                appPath = extractedPath;
+            }
+
+            this.appPath = Path.GetFullPath(appPath);
+        }
+
         /// <summary>
         /// Gets the file fingerprints from the application folder
         /// As the sha1 is calculated based on the content of the file, 
         /// there is a possibility that one key can have multiple fingerprints (duplicate files)
         /// </summary>
-        /// <param name="appPath">The path to the application folder</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>Return a dictionary of file fingerprints, with sha1 as key and a list of file fingerprints as value.</returns>
-        public async Task<Dictionary<string, List<FileFingerprint>>> GetFileFingerprints(string appPath, System.Threading.CancellationToken cancellationToken)
+        public async Task<Dictionary<string, List<FileFingerprint>>> GetFileFingerprints(System.Threading.CancellationToken cancellationToken)
         {
             Dictionary<string, List<FileFingerprint>> fingerprints = new Dictionary<string, List<FileFingerprint>>();
 
-            appPath = Path.GetFullPath(appPath);
-
-            foreach (string file in Directory.GetFiles(appPath, "*", SearchOption.AllDirectories))
-            {   
+            foreach (string file in Directory.GetFiles(this.appPath, "*", SearchOption.AllDirectories))
+            {
                 FileInfo fileInfo = new FileInfo(file);
                 FileFingerprint print = new FileFingerprint();
                 print.Size = fileInfo.Length;
-                print.FileName = fileInfo.FullName.Replace(appPath, string.Empty).TrimStart('\\');
+                print.FileName = fileInfo.FullName.Substring(this.appPath.Length).TrimStart('\\');
+
+                if (Path.DirectorySeparatorChar == '\\')
+                {
+                    print.FileName = print.FileName.Replace(Path.DirectorySeparatorChar, '/');
+                }
+
                 print.SHA1 = await this.CalculateSHA1(fileInfo.FullName, cancellationToken);
 
                 if (fingerprints.ContainsKey(print.SHA1))
@@ -52,20 +79,23 @@
         /// <summary>
         /// Creates a zip archive containing specific files from the application folder
         /// </summary>
-        /// <param name="appPath">The path to the application folder</param>
         /// <param name="files">The files that will be added to the archive.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>An open stream of the zip file</returns>
-        public async Task<System.IO.Stream> GetZippedPayload(string appPath, string[] files, System.Threading.CancellationToken cancellationToken)
+        public async Task<System.IO.Stream> GetZippedPayload(IEnumerable<string> files, System.Threading.CancellationToken cancellationToken)
         {
             string zipFile = Path.Combine(Path.GetTempPath(), "payload.zip");
 
             //// If no files need to be uploaded we create a dummy file
-            if (files.Length == 0)
+            using (var enumerator = files.GetEnumerator())
             {
-                string emptyFile = "_empty_";
-                File.WriteAllText(Path.Combine(appPath, emptyFile), Guid.NewGuid().ToString());
-                files = new string[] { emptyFile };
+                //// equivalent to ( files.Count == 0 ) 
+                if (enumerator.MoveNext() == false)
+                {
+                    string emptyFile = "_empty_";
+                    File.WriteAllText(Path.Combine(this.appPath, emptyFile), Guid.NewGuid().ToString());
+                    files = new string[] { emptyFile };
+                }
             }
 
             using (Stream zipStream = new FileStream(zipFile, FileMode.Create))
@@ -78,7 +108,7 @@
                         {
                             await Task.Factory.StartNew(new Action(() =>
                             {
-                                using (FileStream fs = new FileStream(Path.Combine(appPath, file), FileMode.Open))
+                                using (FileStream fs = new FileStream(Path.Combine(appPath, file), FileMode.Open, FileAccess.Read))
                                 {
                                     using (BufferedStream bs = new BufferedStream(fs))
                                     {
@@ -99,10 +129,21 @@
             return fileStream;
         }
 
+        /// <summary>
+        /// Creates a zip archive containing the all files from the application folder <see cref="AppPushTools"/>
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>An open stream of the zip file</returns>
+        public Task<Stream> GetZippedPayload(System.Threading.CancellationToken cancellationToken)
+        {
+            var files = Directory.GetFiles(this.appPath, "*", SearchOption.AllDirectories).Select(f => new FileInfo(f).FullName.Replace(this.appPath, string.Empty).TrimStart('\\'));
+            return this.GetZippedPayload(files, cancellationToken);
+        }
+
         private async Task<string> CalculateSHA1(string filePath, System.Threading.CancellationToken cancellationToken)
         {
             string formattedSHA1 = string.Empty;
-            using (FileStream fs = new FileStream(filePath, FileMode.Open))
+            using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
             {
                 using (BufferedStream bs = new BufferedStream(fs))
                 {

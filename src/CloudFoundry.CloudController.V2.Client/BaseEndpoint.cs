@@ -3,11 +3,12 @@
     using System;
     using System.Collections.Generic;
     using System.Globalization;
+    using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
     using CloudFoundry.CloudController.Common.Exceptions;
     using CloudFoundry.CloudController.Common.Http;
-    using CloudFoundry.CloudController.V2.Client.Interfaces;
+    
     using CloudFoundry.UAA;
 
     /// <summary>
@@ -20,15 +21,22 @@
         internal async Task<KeyValuePair<string, string>> BuildAuthenticationHeader()
         {
             string autorizationToken = await this.Client.GenerateAuthorizationToken();
-            return new KeyValuePair<string, string>("Authorization", "bearer " + autorizationToken);
+            if (string.IsNullOrWhiteSpace(autorizationToken))
+            {
+                return new KeyValuePair<string, string>();
+            }
+            else
+            {
+                return new KeyValuePair<string, string>("Authorization", string.Format(CultureInfo.InvariantCulture, "bearer {0}", autorizationToken));
+            }
         }
 
         internal SimpleHttpClient GetHttpClient()
         {
-            var httpClient = new SimpleHttpClient(this.Client.CancellationToken);
+            var httpClient = new SimpleHttpClient(this.Client.CancellationToken, this.Client.RequestTimeout);
 
             try
-            {                
+            {
                 httpClient.HttpProxy = this.Client.HttpProxy;
                 httpClient.SkipCertificateValidation = this.Client.SkipCertificateValidation;
             }
@@ -43,9 +51,30 @@
 
         internal async Task<SimpleHttpResponse> SendAsync(SimpleHttpClient client, int expectedReturnStatus)
         {
+            int[] codes = new int[] { expectedReturnStatus };
+            return await this.SendAsync(client, codes);
+        }
+
+        internal async Task<SimpleHttpResponse> SendAsync(SimpleHttpClient client, int[] expectedReturnStatus)
+        {
             var result = await client.SendAsync();
 
-            if (((int)result.StatusCode) != expectedReturnStatus)
+            bool success = false;
+            foreach (int code in expectedReturnStatus)
+            {
+                if (((int)result.StatusCode) == code)
+                {
+                    success = true;
+                    break;
+                }
+            }
+            
+            if (!success && !this.Client.UseStrictStatusCodeChecking)
+            {
+                success = IsSuccessStatusCode(result.StatusCode);
+            }
+
+            if (!success)
             {
                 // Check if we can deserialize the response
                 CloudFoundryException cloudFoundryException;
@@ -68,6 +97,11 @@
             }
 
             return result;
+        }
+
+        private static bool IsSuccessStatusCode(HttpStatusCode statusCode)
+        {
+            return statusCode >= HttpStatusCode.OK && statusCode < HttpStatusCode.MultipleChoices;
         }
     }
 }

@@ -5,10 +5,12 @@ using CloudFoundry.CloudController.V2.Client;
 using CloudFoundry.CloudController.V2.Client.Data;
 using System.Threading;
 using CloudFoundry.UAA;
+using System.IO;
 
 namespace CloudFoundry.CloudController.Test.Integration
 {
     [TestClass]
+    [DeploymentItem("Assets")]
     public class PushTest
     {
         private static string appPath = TestUtil.TestAppPath;
@@ -61,14 +63,14 @@ namespace CloudFoundry.CloudController.Test.Integration
 
             if (winStack == Guid.Empty)
             {
-                throw new Exception("Could not test on a deployment without a windows 2012 stack");
+                Assert.Inconclusive("Could not test on a deployment without a windows 2012 stack");
             }
 
             PagedResponseCollection<ListAllAppsResponse> apps = client.Apps.ListAllApps().Result;
 
             foreach (ListAllAppsResponse app in apps)
             {
-                if (app.Name == "simplePushTest")
+                if (app.Name.StartsWith("simplePushTest"))
                 {
                     client.Apps.DeleteApp(app.EntityMetadata.Guid).Wait();
                     break;
@@ -76,7 +78,6 @@ namespace CloudFoundry.CloudController.Test.Integration
             }
 
             apprequest = new CreateAppRequest();
-            apprequest.Name = "simplePushTest";
             apprequest.Memory = 512;
             apprequest.Instances = 1;
             apprequest.SpaceGuid = spaceGuid;
@@ -93,6 +94,8 @@ namespace CloudFoundry.CloudController.Test.Integration
         [TestMethod]
         public void PushJobTest()
         {
+            apprequest.Name = "simplePushTest" + Guid.NewGuid().ToString("N");
+
             CreateAppResponse app = client.Apps.CreateApp(apprequest).Result;
 
             Guid appGuid = app.EntityMetadata.Guid;
@@ -103,8 +106,33 @@ namespace CloudFoundry.CloudController.Test.Integration
         }
 
         [TestMethod]
+        public void PushWithReadonlyFilesTest()
+        {
+            var tmpPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(tmpPath);
+            var tmpReadonlyFile = Path.Combine(tmpPath, "readonly.txt");
+            File.WriteAllText(tmpReadonlyFile, "contenttt");
+
+            apprequest.Name = "readonylPushTest" + Guid.NewGuid().ToString("N");
+
+            CreateAppResponse app = client.Apps.CreateApp(apprequest).Result;
+
+            Guid appGuid = app.EntityMetadata.Guid;
+
+            File.SetAttributes(tmpReadonlyFile, FileAttributes.ReadOnly);
+
+            client.Apps.Push(appGuid, tmpPath, false).Wait();
+
+            File.SetAttributes(tmpReadonlyFile, ~FileAttributes.ReadOnly);
+            Directory.Delete(tmpPath, true);
+            client.Apps.DeleteApp(appGuid).Wait();
+        }
+
+        [TestMethod]
         public void DoublePush()
         {
+            apprequest.Name = "simplePushTest" + Guid.NewGuid().ToString("N");
+
             CreateAppResponse app = client.Apps.CreateApp(apprequest).Result;
 
             client.Apps.Push(app.EntityMetadata.Guid, appPath, false).Wait();

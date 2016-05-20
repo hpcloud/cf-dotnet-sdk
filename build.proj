@@ -16,6 +16,9 @@
   /t:UnitTest
     Runs unit tests
     
+  /t:IntegrationTest
+    Runs integration tests
+    
   /t:RestoreNugetPackages
     Restores nuget packages
     
@@ -56,7 +59,8 @@
 
     <CoverageXml>$(LibraryRoot)\TestResults\cf-dotnet-sdk.coveragexml</CoverageXml>
     <CoverageHtmlDir>$(LibraryRoot)\TestResults\coveragehtml</CoverageHtmlDir>
-    
+
+    <TestCaseFilter Condition="'$(TestCaseFilter)' == ''">TestCategory!=none</TestCaseFilter>
   </PropertyGroup>
 
   <!-- Import msbuild extensions -->
@@ -79,7 +83,7 @@
   <!-- Target for running unit tests with code coverage-->
   <Target Name="UnitTest">
     <ItemGroup>
-      <TestDlls Include=".\src\CloudFoundry.CloudController.V2.Client.Test\bin\$(Configuration)\CloudFoundry.CloudController.V2.Client.Test.dll"/>
+      <TestDlls Include=".\src\CloudFoundry.CloudController.V2.Client.Test\bin\$(Configuration)\CloudFoundry.CloudController.V2.Client.Test.dll .\src\CloudFoundry.CloudController.V3.Client.Test\bin\$(Configuration)\CloudFoundry.CloudController.V3.Client.Test.dll"/>
     </ItemGroup>
 
     <Exec Command="$(VSTestCommand) %(TestDlls.Identity) /inIsolation /settings:CodeCoverage.runsettings /logger:trx"  ConsoleToMSBuild="true">
@@ -107,6 +111,30 @@
     <Exec Command="$(ReportGeneratorCommand) -reports:&quot;$(CoverageXml)&quot; -targetdir:&quot;$(CoverageHtmlDir)&quot;" />
   </Target>
 
+  <!-- Target for running integration tests-->
+  <Target Name="IntegrationTest">
+    <ItemGroup>
+      <TestDlls Include=".\src\CloudFoundry.CloudController.Test.Integration\bin\$(Configuration)\CloudFoundry.CloudController.Test.Integration.dll"/>
+      <ConfigFile Include=".\src\CloudFoundry.CloudController.Test.Integration\bin\$(Configuration)\CloudFoundry.CloudController.Test.Integration.dll.config"/>
+    </ItemGroup>
+
+    <Warning Text="The CFDotNetSDKTestsServerUrl property not set, value from app.config will be used." Condition="'$(CFDotNetSDKTestsServerUrl)' == ''" />
+    <Warning Text="The CFDotNetSDKTestsUser property not set, value from app.config will be used." Condition="'$(CFDotNetSDKTestsUser)' == ''" />
+    <Warning Text="The CFDotNetSDKTestsPassword property not set, value from app.config will be used." Condition="'$(CFDotNetSDKTestsPassword)' == ''" />
+    <Warning Text="The CFDotNetSDKTestsIgnoreCertificate property not set, value from app.config will be used." Condition="'$(CFDotNetSDKTestsIgnoreCertificate)' == ''" />
+
+    <Message Text="Updating config file at %(ConfigFile.Identity)" />
+    <XmlPoke Condition="'$(CFDotNetSDKTestsServerUrl)' != ''" XmlInputPath="%(ConfigFile.Identity)" Query="/configuration/appSettings/add[@key='TestServerUrl']/@value" Value="$(CFDotNetSDKTestsServerUrl)"/>
+    <XmlPoke Condition="'$(CFDotNetSDKTestsUser)' != ''" XmlInputPath="%(ConfigFile.Identity)" Query="/configuration/appSettings/add[@key='User']/@value" Value="$(CFDotNetSDKTestsUser)"/>
+    <XmlPoke Condition="'$(CFDotNetSDKTestsPassword)' != ''" XmlInputPath="%(ConfigFile.Identity)" Query="/configuration/appSettings/add[@key='Password']/@value" Value="$(CFDotNetSDKTestsPassword)"/>
+    <XmlPoke Condition="'$(CFDotNetSDKTestsIgnoreCertificate)' != ''" XmlInputPath="%(ConfigFile.Identity)" Query="/configuration/appSettings/add[@key='IgnoreCertificate']/@value" Value="$(CFDotNetSDKTestsIgnoreCertificate)"/>
+    
+    <Exec Command="$(VSTestCommand) %(TestDlls.Identity) /inIsolation /settings:CodeCoverage.runsettings /logger:trx /TestCaseFilter:&quot;$(TestCaseFilter)&quot;"  ConsoleToMSBuild="true">
+      <Output TaskParameter="ExitCode" PropertyName="ErrorCode"/>
+      <Output TaskParameter="ConsoleOutput" PropertyName="OutputOfTestRun" />
+    </Exec>
+  </Target>
+
   <!-- Target for restoring nuget packages -->
   <Target Name="RestoreNugetPackages">
     <Exec Command="$(NuGetCommand) restore $(SDKSolution)"/>
@@ -123,10 +151,12 @@
   
     <ItemGroup>
       <AssemblyInfoFiles Include="$(LibraryRoot)\src\CloudFoundry.CloudController.V2.Client\Properties\AssemblyInfo.cs"/>
+      <AssemblyInfoFiles Include="$(LibraryRoot)\src\CloudFoundry.CloudController.V3.Client\Properties\AssemblyInfo.cs"/>
       <AssemblyInfoFiles Include="$(LibraryRoot)\src\CloudFoundry.CloudController.Common\Properties\AssemblyInfo.cs"/>
       <AssemblyInfoFiles Include="$(LibraryRoot)\src\CloudFoundry.Logyard.Client\Properties\AssemblyInfo.cs"/>
       <AssemblyInfoFiles Include="$(LibraryRoot)\src\CloudFoundry.UAA.Client\Properties\AssemblyInfo.cs"/>
       <AssemblyInfoFiles Include="$(LibraryRoot)\src\CloudFoundry.Loggregator.Client\Properties\AssemblyInfo.cs"/>
+      <AssemblyInfoFiles Include="$(LibraryRoot)\src\CloudFoundry.Manifests\Properties\AssemblyInfo.cs"/>
     </ItemGroup>
 
     <MSBuild.ExtensionPack.Framework.AssemblyInfo AssemblyInfoFiles="@(AssemblyInfoFiles)"
